@@ -63,7 +63,7 @@ private:
 	}
 
 	static bool IsHalfChar(char c) {
-		static const std::set<char> CHARS = {'=', '!'};
+		static const std::set<char> CHARS = {'=', '!', '<', '>'};
 		return CHARS.contains(c);
 	}
 

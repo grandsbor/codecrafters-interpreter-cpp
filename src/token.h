@@ -25,6 +25,10 @@ enum class TokenType {
 	EqualEqual,
 	Bang,
 	BangEqual,
+	Less,
+	LessEqual,
+	Greater,
+	GreaterEqual,
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -43,6 +47,10 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::EqualEqual, "EQUAL_EQUAL"},
 	{TokenType::Bang, "BANG"},
 	{TokenType::BangEqual, "BANG_EQUAL"},
+	{TokenType::Less, "LESS"},
+	{TokenType::LessEqual, "LESS_EQUAL"},
+	{TokenType::Greater, "GREATER"},
+	{TokenType::GreaterEqual, "GREATER_EQUAL"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -79,6 +87,8 @@ struct Token {
 		case '*': Type_ = TokenType::Star; break;
 		case '=': Type_ = TokenType::Equal; break;
 		case '!': Type_ = TokenType::Bang; break;
+		case '<': Type_ = TokenType::Less; break;
+		case '>': Type_ = TokenType::Greater; break;
 		default:
 			throw UnknownCharacterError();
 		}
@@ -97,6 +107,12 @@ struct Token {
 			break;
 		case '!':
 			Type_ = TokenType::BangEqual;
+			break;
+		case '<':
+			Type_ = TokenType::LessEqual;
+			break;
+		case '>':
+			Type_ = TokenType::GreaterEqual;
 			break;
 		default:
 			;
