@@ -10,6 +10,7 @@
 enum class TokenizerState {
 	Default,
 	MaybePartialToken,
+	Comment,
 };
 
 class Tokenizer {
@@ -34,12 +35,17 @@ private:
 	void Advance() {
 		char c = Content_[Pos_];
 		switch (State_) {
+		case TokenizerState::Comment:
+			break;
 		case TokenizerState::MaybePartialToken:
-			if (c == '=') {
+			if (c == '/' && PrevChar() == c) {
+				State_ = TokenizerState::Comment;
+				break;
+			} else if (c == '=') {
 				Tokens_.emplace_back(PrevChar(), c, this->LineNo_);
-				++Pos_;
 			} else {
 				Tokens_.emplace_back(PrevChar(), this->LineNo_);
+				--Pos_;
 			}
 			State_ = TokenizerState::Default;
 			break;
@@ -54,8 +60,8 @@ private:
 					RetCode_ = LEXERR_UNKNOWN_CHAR;
 				}
 			}
-			++Pos_;
 		}
+		++Pos_;
 	}
 
 	bool AtEnd() const {
@@ -63,7 +69,7 @@ private:
 	}
 
 	static bool IsHalfChar(char c) {
-		static const std::set<char> CHARS = {'=', '!', '<', '>'};
+		static const std::set<char> CHARS = {'=', '!', '<', '>', '/'};
 		return CHARS.contains(c);
 	}
 

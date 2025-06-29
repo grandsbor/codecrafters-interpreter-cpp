@@ -43,6 +43,7 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::Plus, "PLUS"},
 	{TokenType::Semicolon, "SEMICOLON"},
 	{TokenType::Star, "STAR"},
+	{TokenType::Slash, "SLASH"},
 	{TokenType::Equal, "EQUAL"},
 	{TokenType::EqualEqual, "EQUAL_EQUAL"},
 	{TokenType::Bang, "BANG"},
@@ -89,6 +90,7 @@ struct Token {
 		case '!': Type_ = TokenType::Bang; break;
 		case '<': Type_ = TokenType::Less; break;
 		case '>': Type_ = TokenType::Greater; break;
+		case '/': Type_ = TokenType::Slash; break;
 		default:
 			throw UnknownCharacterError();
 		}
