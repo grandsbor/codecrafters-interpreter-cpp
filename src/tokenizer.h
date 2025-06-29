@@ -52,7 +52,9 @@ private:
 		default:
 			if (IsHalfChar(c)) {
 				State_ = TokenizerState::MaybePartialToken;
-			} else {
+			} else if (c == '\n') {
+				++LineNo_;
+			} else if (c != ' ' && c != '\t') {
 				try {
 					Tokens_.emplace_back(c, this->LineNo_);
 				} catch (const UnknownCharacterError&) {
