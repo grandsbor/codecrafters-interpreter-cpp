@@ -23,6 +23,8 @@ enum class TokenType {
 	Slash,
 	Equal,
 	EqualEqual,
+	Bang,
+	BangEqual,
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -39,6 +41,8 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::Star, "STAR"},
 	{TokenType::Equal, "EQUAL"},
 	{TokenType::EqualEqual, "EQUAL_EQUAL"},
+	{TokenType::Bang, "BANG"},
+	{TokenType::BangEqual, "BANG_EQUAL"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -59,16 +63,7 @@ struct Token {
 		: Type_(type)
 		, LineNo_(lineNo)
 		, Lexeme_(lexeme)
-	{
-		switch (type) {
-		case TokenType::Equal:
-			Lexeme_ = "=";
-			break;
-		case TokenType::EqualEqual:
-			Lexeme_ = "==";
-			break;
-		}
-	}
+	{}
 	
 	Token(char c, size_t lineNo) {
 		switch (c) {
@@ -82,12 +77,33 @@ struct Token {
 		case '+': Type_ = TokenType::Plus; break;
 		case ';': Type_ = TokenType::Semicolon; break;
 		case '*': Type_ = TokenType::Star; break;
+		case '=': Type_ = TokenType::Equal; break;
+		case '!': Type_ = TokenType::Bang; break;
 		default:
 			throw UnknownCharacterError();
 		}
 
 		LineNo_ = lineNo;
 		Lexeme_ = c;
+	}
+
+	Token(char c1, char c2, size_t lineNo) {
+		if (c2 != '=') {
+			throw std::logic_error("Not implemented");
+		}
+		switch (c1) {
+		case '=':
+			Type_ = TokenType::EqualEqual;
+			break;
+		case '!':
+			Type_ = TokenType::BangEqual;
+			break;
+		default:
+			;
+		}
+
+		LineNo_ = lineNo;
+		Lexeme_ = std::string{c1} + c2;
 	}
 
 	std::string Str() const {

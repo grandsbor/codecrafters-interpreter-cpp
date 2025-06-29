@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <tuple>
+#include <set>
 
 #include "token.h"
 
@@ -8,7 +9,7 @@
 
 enum class TokenizerState {
 	Default,
-	AfterEqualSign,
+	MaybePartialToken,
 };
 
 class Tokenizer {
@@ -22,8 +23,8 @@ public:
 			Advance();
 		}
 		switch (State_) {
-		case TokenizerState::AfterEqualSign:
-			Tokens_.emplace_back(TokenType::Equal, this->LineNo_);
+		case TokenizerState::MaybePartialToken:
+			Tokens_.emplace_back(PrevChar(), this->LineNo_);
 			break;
 		}
 		Tokens_.emplace_back(TokenType::Eof, this->LineNo_);
@@ -31,33 +32,46 @@ public:
 	}
 private:
 	void Advance() {
-		char c = Content_[Pos_++];
+		char c = Content_[Pos_];
 		switch (State_) {
-		case TokenizerState::AfterEqualSign:
+		case TokenizerState::MaybePartialToken:
 			if (c == '=') {
-				Tokens_.emplace_back(TokenType::EqualEqual, this->LineNo_);
+				Tokens_.emplace_back(PrevChar(), c, this->LineNo_);
+				++Pos_;
 			} else {
-				Tokens_.emplace_back(TokenType::Equal, this->LineNo_);
-				--Pos_;
+				Tokens_.emplace_back(PrevChar(), this->LineNo_);
 			}
 			State_ = TokenizerState::Default;
 			break;
 		default:
-			if (c == '=') {
-				State_ = TokenizerState::AfterEqualSign;
-				return;
+			if (IsHalfChar(c)) {
+				State_ = TokenizerState::MaybePartialToken;
+			} else {
+				try {
+					Tokens_.emplace_back(c, this->LineNo_);
+				} catch (const UnknownCharacterError&) {
+					LogError(std::string("Unexpected character: ") + c);
+					RetCode_ = LEXERR_UNKNOWN_CHAR;
+				}
 			}
-			try {
-				Tokens_.emplace_back(c, this->LineNo_);
-			} catch (const UnknownCharacterError&) {
-				LogError(std::string("Unexpected character: ") + c);
-				RetCode_ = LEXERR_UNKNOWN_CHAR;
-			}
+			++Pos_;
 		}
 	}
 
 	bool AtEnd() const {
 		return Pos_ >= Content_.size(); 
+	}
+
+	static bool IsHalfChar(char c) {
+		static const std::set<char> CHARS = {'=', '!'};
+		return CHARS.contains(c);
+	}
+
+	char PrevChar() const {
+		if (Pos_ == 0) {
+			throw std::logic_error("");
+		}
+		return Content_[Pos_ - 1];
 	}
 
 	void LogError(const std::string& msg) const {
