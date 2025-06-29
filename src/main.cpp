@@ -4,6 +4,8 @@
 #include <sstream>
 #include <string>
 
+#include "tokenizer.h"
+
 std::string read_file_contents(const std::string& filename);
 
 int main(int argc, char *argv[]) {
@@ -20,12 +22,11 @@ int main(int argc, char *argv[]) {
 
     if (command == "tokenize") {
         std::string file_contents = read_file_contents(argv[2]);
-        
-        if (!file_contents.empty()) {
-            std::cerr << "Scanner not implemented" << std::endl;
-            return 1;
+        Tokenizer t(file_contents);
+        const auto [tokens, retcode] = t.Tokenize();
+        for (const auto& token : tokens) {
+            std::cout << token.Str() << std::endl;
         }
-        std::cout << "EOF  null" << std::endl;
     } else {
         std::cerr << "Unknown command: " << command << std::endl;
         return 1;
