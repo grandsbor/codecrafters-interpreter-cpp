@@ -17,6 +17,8 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::Eof, "EOF"},
 	{TokenType::LeftParen, "LEFT_PAREN"},
 	{TokenType::RightParen, "RIGHT_PAREN"},
+	{TokenType::LeftBrace, "LEFT_BRACE"},
+	{TokenType::RightBrace, "RIGHT_BRACE"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -43,6 +45,8 @@ struct Token {
 		switch (c) {
 		case '(': Type_ = TokenType::LeftParen; break;
 		case ')': Type_ = TokenType::RightParen; break;
+		case '{': Type_ = TokenType::LeftBrace; break;
+		case '}': Type_ = TokenType::RightBrace; break;
 		default:
 			;
 		}
