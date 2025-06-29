@@ -5,11 +5,12 @@
 
 #include "token.h"
 
-#define LEXERR_UNKNOWN_CHAR 65;
+#define LEXER_ERR 65;
 
 enum class TokenizerState {
 	Default,
 	MaybePartialToken,
+	StringLiteral,
 	Comment,
 };
 
@@ -27,6 +28,10 @@ public:
 		case TokenizerState::MaybePartialToken:
 			Tokens_.emplace_back(PrevChar(), this->LineNo_);
 			break;
+		case TokenizerState::StringLiteral:
+			LogError("Unterminated string.");
+			RetCode_ = LEXER_ERR;
+			break;
 		}
 		Tokens_.emplace_back(TokenType::Eof, this->LineNo_);
 		return {std::move(Tokens_), RetCode_};
@@ -36,9 +41,18 @@ private:
 		char c = Content_[Pos_];
 		switch (State_) {
 		case TokenizerState::Comment:
-			if (c == '\n') {
+			break;
+		case TokenizerState::StringLiteral:
+			if (c == '"') {
+				Tokens_.emplace_back(
+					TokenType::String,
+					this->LineNo_,
+					Content_.substr(LiteralStart_, Pos_ - LiteralStart_ + 1)
+				);
 				State_ = TokenizerState::Default;
-				++LineNo_;
+			} else if (c == '\n') {
+				LogError("Unterminated string.");
+				RetCode_ = LEXER_ERR;
 			}
 			break;
 		case TokenizerState::MaybePartialToken:
@@ -56,16 +70,21 @@ private:
 		default:
 			if (IsHalfChar(c)) {
 				State_ = TokenizerState::MaybePartialToken;
-			} else if (c == '\n') {
-				++LineNo_;
-			} else if (c != ' ' && c != '\t') {
+			} else if (c == '"') {
+				State_ = TokenizerState::StringLiteral;
+				LiteralStart_ = Pos_;
+			} else if (c != ' ' && c != '\t' && c != '\n') {
 				try {
 					Tokens_.emplace_back(c, this->LineNo_);
 				} catch (const UnknownCharacterError&) {
 					LogError(std::string("Unexpected character: ") + c);
-					RetCode_ = LEXERR_UNKNOWN_CHAR;
+					RetCode_ = LEXER_ERR;
 				}
 			}
+		}
+		if (c == '\n') {
+			State_ = TokenizerState::Default;
+			++LineNo_;
 		}
 		++Pos_;
 	}
@@ -96,4 +115,5 @@ private:
 	int RetCode_ = 0;
 	TokenizerState State_ = TokenizerState::Default;
 	std::vector<Token> Tokens_;
+	size_t LiteralStart_ = 0;
 };

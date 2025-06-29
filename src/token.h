@@ -29,6 +29,7 @@ enum class TokenType {
 	LessEqual,
 	Greater,
 	GreaterEqual,
+	String,
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -52,6 +53,7 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::LessEqual, "LESS_EQUAL"},
 	{TokenType::Greater, "GREATER"},
 	{TokenType::GreaterEqual, "GREATER_EQUAL"},
+	{TokenType::String, "STRING"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -71,8 +73,12 @@ struct Token {
 	Token(TokenType type, size_t lineNo, std::string lexeme = {})
 		: Type_(type)
 		, LineNo_(lineNo)
-		, Lexeme_(lexeme)
-	{}
+		, Lexeme_(std::move(lexeme))
+	{
+		if (type == TokenType::String && Lexeme_.size() > 2) {
+			Literal_ = Lexeme_.substr(1, Lexeme_.size() - 2);
+		}
+	}
 	
 	Token(char c, size_t lineNo) {
 		switch (c) {
