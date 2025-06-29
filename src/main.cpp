@@ -19,11 +19,13 @@ int main(int argc, char *argv[]) {
     }
 
     const std::string command = argv[1];
+    int retcode = 0;
 
     if (command == "tokenize") {
         std::string file_contents = read_file_contents(argv[2]);
         Tokenizer t(file_contents);
-        const auto [tokens, retcode] = t.Tokenize();
+        const auto [tokens, rc] = t.Tokenize();
+        retcode = rc;
         for (const auto& token : tokens) {
             std::cout << token.Str() << std::endl;
         }
@@ -32,7 +34,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    return 0;
+    return retcode;
 }
 
 std::string read_file_contents(const std::string& filename) {
