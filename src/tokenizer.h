@@ -36,6 +36,10 @@ private:
 		char c = Content_[Pos_];
 		switch (State_) {
 		case TokenizerState::Comment:
+			if (c == '\n') {
+				State_ = TokenizerState::Default;
+				++LineNo_;
+			}
 			break;
 		case TokenizerState::MaybePartialToken:
 			if (c == '/' && PrevChar() == c) {
