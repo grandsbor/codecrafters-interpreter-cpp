@@ -20,8 +20,12 @@ public:
 private:
 	void Advance() {
 		char c = Content_[Pos++];
-		Token t(c, this->LineNo_);
-		Tokens_.push_back(std::move(t));
+		try {
+			Token t(c, this->LineNo_);
+			Tokens_.push_back(std::move(t));
+		} catch (const UnknownCharacterError&) {
+			;
+		}
 	}
 
 	bool AtEnd() const {
