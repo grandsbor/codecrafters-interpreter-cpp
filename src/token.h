@@ -21,6 +21,8 @@ enum class TokenType {
 	Semicolon,
 	Star,
 	Slash,
+	Equal,
+	EqualEqual,
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -35,6 +37,8 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::Plus, "PLUS"},
 	{TokenType::Semicolon, "SEMICOLON"},
 	{TokenType::Star, "STAR"},
+	{TokenType::Equal, "EQUAL"},
+	{TokenType::EqualEqual, "EQUAL_EQUAL"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -55,7 +59,16 @@ struct Token {
 		: Type_(type)
 		, LineNo_(lineNo)
 		, Lexeme_(lexeme)
-	{}
+	{
+		switch (type) {
+		case TokenType::Equal:
+			Lexeme_ = "=";
+			break;
+		case TokenType::EqualEqual:
+			Lexeme_ = "==";
+			break;
+		}
+	}
 	
 	Token(char c, size_t lineNo) {
 		switch (c) {
