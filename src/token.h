@@ -32,6 +32,7 @@ enum class TokenType {
 	String,
 	Number,
 	Integer,
+	Identifier,
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -58,6 +59,7 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::String, "STRING"},
 	{TokenType::Number, "NUMBER"},
 	{TokenType::Integer, "NUMBER"},
+	{TokenType::Identifier, "IDENTIFIER"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {

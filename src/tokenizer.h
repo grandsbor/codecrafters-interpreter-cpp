@@ -11,6 +11,7 @@ enum class TokenizerState {
 	Default,
 	StringLiteral,
 	Number,
+	Identifier,
 	Comment,
 };
 
@@ -32,6 +33,9 @@ public:
 		case TokenizerState::Number:
 			EndOfLiteral(TokenType::Number);
 			break;
+		case TokenizerState::Identifier:
+			EndOfLiteral(TokenType::Identifier);
+			break;
 		}
 		Tokens_.emplace_back(TokenType::Eof, this->LineNo_);
 		return {std::move(Tokens_), RetCode_};
@@ -48,6 +52,12 @@ private:
 			} else if (c == '\n') {
 				LogError("Unterminated string.");
 				RetCode_ = LEXER_ERR;
+			}
+			break;
+		case TokenizerState::Identifier:
+			if (!IsNormalChar(c) && !IsDigit(c)) {
+				EndOfLiteral(TokenType::Identifier);
+				--Pos_;
 			}
 			break;
 		case TokenizerState::Number:
@@ -75,10 +85,13 @@ private:
 			} else if (c == '"') {
 				State_ = TokenizerState::StringLiteral;
 				LiteralStart_ = Pos_;
+			} else if (IsNormalChar(c)) {
+				State_ = TokenizerState::Identifier;
+				LiteralStart_ = Pos_;
 			} else if (IsDigit(c)) {
 				State_ = TokenizerState::Number;
 				LiteralStart_ = Pos_;
-			} else if (c != ' ' && c != '\t' && c != '\n') {
+			} else if (!IsSpace(c)) {
 				try {
 					Tokens_.emplace_back(c, this->LineNo_);
 				} catch (const UnknownCharacterError&) {
@@ -113,8 +126,18 @@ private:
 		return CHARS.contains(c);
 	}
 
+	static bool IsSpace(char c) {
+		return c == ' ' || c == '\t' || c == '\n';
+	}
+
 	static bool IsDigit(char c) {
 		return c >= '0' && c <= '9';
+	}
+
+	static bool IsNormalChar(char c) {
+		return c == '_'
+			|| (c >= 'A' && c <= 'Z')
+			|| (c >= 'a' && c <= 'z');;
 	}
 
 	char NextChar() const {
