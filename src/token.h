@@ -33,6 +33,42 @@ enum class TokenType {
 	Number,
 	Integer,
 	Identifier,
+	// reserved words
+	And,
+	Class,
+	Else,
+	False,
+	For,
+	Fun,
+	If,
+	Nil,
+	Or,
+	Print,
+	Return,
+	Super,
+	This,
+	True,
+	Var,
+	While,
+};
+
+inline const std::unordered_map<std::string, TokenType> RESERVED = {
+	{"and", TokenType::And},
+	{"class", TokenType::Class},
+	{"else", TokenType::Else},
+	{"false", TokenType::False},
+	{"for", TokenType::For},
+	{"fun", TokenType::Fun},
+	{"if", TokenType::If},
+	{"nil", TokenType::Nil},
+	{"or", TokenType::Or},
+	{"print", TokenType::Print},
+	{"return", TokenType::Return},
+	{"super", TokenType::Super},
+	{"this", TokenType::This},
+	{"true", TokenType::True},
+	{"var", TokenType::Var},
+	{"while", TokenType::While},
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -60,6 +96,23 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::Number, "NUMBER"},
 	{TokenType::Integer, "NUMBER"},
 	{TokenType::Identifier, "IDENTIFIER"},
+	// reserved words
+	{TokenType::And, "AND"},
+	{TokenType::Class, "CLASS"},
+	{TokenType::Else, "ELSE"},
+	{TokenType::False, "FALSE"},
+	{TokenType::For, "FOR"},
+	{TokenType::Fun, "FUN"},
+	{TokenType::If, "IF"},
+	{TokenType::Nil, "NIL"},
+	{TokenType::Or, "OR"},
+	{TokenType::Print, "PRINT"},
+	{TokenType::Return, "RETURN"},
+	{TokenType::Super, "SUPER"},
+	{TokenType::This, "THIS"},
+	{TokenType::True, "TRUE"},
+	{TokenType::Var, "VAR"},
+	{TokenType::While, "WHILE"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -95,6 +148,11 @@ struct Token {
 					Type_ = TokenType::Integer;
 					Literal_ = Lexeme_.substr(0, pointPos + 1) + '0';
 				}
+			}
+		} else if (type == TokenType::Identifier) {
+			auto it = RESERVED.find(Lexeme_);
+			if (it != RESERVED.end()) {
+				Type_ = it->second;
 			}
 		}
 	}
