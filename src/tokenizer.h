@@ -9,8 +9,8 @@
 
 enum class TokenizerState {
 	Default,
-	MaybePartialToken,
 	StringLiteral,
+	Number,
 	Comment,
 };
 
@@ -25,12 +25,12 @@ public:
 			Advance();
 		}
 		switch (State_) {
-		case TokenizerState::MaybePartialToken:
-			Tokens_.emplace_back(PrevChar(), this->LineNo_);
-			break;
 		case TokenizerState::StringLiteral:
 			LogError("Unterminated string.");
 			RetCode_ = LEXER_ERR;
+			break;
+		case TokenizerState::Number:
+			EndOfLiteral(TokenType::Number);
 			break;
 		}
 		Tokens_.emplace_back(TokenType::Eof, this->LineNo_);
@@ -44,34 +44,39 @@ private:
 			break;
 		case TokenizerState::StringLiteral:
 			if (c == '"') {
-				Tokens_.emplace_back(
-					TokenType::String,
-					this->LineNo_,
-					Content_.substr(LiteralStart_, Pos_ - LiteralStart_ + 1)
-				);
-				State_ = TokenizerState::Default;
+				EndOfLiteral(TokenType::String);
 			} else if (c == '\n') {
 				LogError("Unterminated string.");
 				RetCode_ = LEXER_ERR;
 			}
 			break;
-		case TokenizerState::MaybePartialToken:
-			if (c == '/' && PrevChar() == c) {
-				State_ = TokenizerState::Comment;
-				break;
-			} else if (c == '=') {
-				Tokens_.emplace_back(PrevChar(), c, this->LineNo_);
-			} else {
-				Tokens_.emplace_back(PrevChar(), this->LineNo_);
+		case TokenizerState::Number:
+			if (c == '.') {
+				if (NumberHasPoint || !IsDigit(NextChar())) {
+					EndOfLiteral(TokenType::Number);
+					NumberHasPoint = false;
+					--Pos_;
+				} else {
+					NumberHasPoint = true;
+				}
+			} else if (!IsDigit(c)) {
+				EndOfLiteral(TokenType::Number);
+				NumberHasPoint = false;
 				--Pos_;
 			}
-			State_ = TokenizerState::Default;
 			break;
 		default:
-			if (IsHalfChar(c)) {
-				State_ = TokenizerState::MaybePartialToken;
+			if (IsHalfChar(c) && NextChar() == '=') {
+				Tokens_.emplace_back(c, '=', this->LineNo_);
+				++Pos_;
+			} else if (c == '/' && NextChar() == '/') {
+				State_ = TokenizerState::Comment;
+				++Pos_;
 			} else if (c == '"') {
 				State_ = TokenizerState::StringLiteral;
+				LiteralStart_ = Pos_;
+			} else if (IsDigit(c)) {
+				State_ = TokenizerState::Number;
 				LiteralStart_ = Pos_;
 			} else if (c != ' ' && c != '\t' && c != '\n') {
 				try {
@@ -89,20 +94,34 @@ private:
 		++Pos_;
 	}
 
+	void EndOfLiteral(TokenType type) {
+		size_t len = Pos_ - LiteralStart_ + (type == TokenType::String);
+		Tokens_.emplace_back(
+			type,
+			this->LineNo_,
+			Content_.substr(LiteralStart_, len)
+		);
+		State_ = TokenizerState::Default;
+	}
+
 	bool AtEnd() const {
 		return Pos_ >= Content_.size(); 
 	}
 
 	static bool IsHalfChar(char c) {
-		static const std::set<char> CHARS = {'=', '!', '<', '>', '/'};
+		static const std::set<char> CHARS = {'=', '!', '<', '>'};
 		return CHARS.contains(c);
 	}
 
-	char PrevChar() const {
-		if (Pos_ == 0) {
-			throw std::logic_error("");
+	static bool IsDigit(char c) {
+		return c >= '0' && c <= '9';
+	}
+
+	char NextChar() const {
+		if (Pos_ >= Content_.size() - 1) {
+			return 0;
 		}
-		return Content_[Pos_ - 1];
+		return Content_[Pos_ + 1];
 	}
 
 	void LogError(const std::string& msg) const {
@@ -116,4 +135,5 @@ private:
 	TokenizerState State_ = TokenizerState::Default;
 	std::vector<Token> Tokens_;
 	size_t LiteralStart_ = 0;
+	bool NumberHasPoint = false;
 };

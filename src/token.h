@@ -30,6 +30,8 @@ enum class TokenType {
 	Greater,
 	GreaterEqual,
 	String,
+	Number,
+	Integer,
 };
 
 inline const std::unordered_map<TokenType, std::string> TS = {
@@ -54,6 +56,8 @@ inline const std::unordered_map<TokenType, std::string> TS = {
 	{TokenType::Greater, "GREATER"},
 	{TokenType::GreaterEqual, "GREATER_EQUAL"},
 	{TokenType::String, "STRING"},
+	{TokenType::Number, "NUMBER"},
+	{TokenType::Integer, "NUMBER"},
 };
 
 std::ostream& operator<<(std::ostream& os, TokenType type) {
@@ -77,6 +81,19 @@ struct Token {
 	{
 		if (type == TokenType::String && Lexeme_.size() > 2) {
 			Literal_ = Lexeme_.substr(1, Lexeme_.size() - 2);
+		} else if (type == TokenType::Number) {
+			Literal_ = Lexeme_;
+			const size_t pointPos = Literal_.find('.');
+			if (pointPos == std::string::npos) {
+				Type_ = TokenType::Integer;
+				Literal_ += ".0";
+			} else {
+				const size_t lastNonZeroPos = Literal_.find_last_not_of('0');
+				if (lastNonZeroPos <= pointPos) {
+					Type_ = TokenType::Integer;
+					Literal_ = Lexeme_.substr(0, pointPos + 1) + '0';
+				}
+			}
 		}
 	}
 	
